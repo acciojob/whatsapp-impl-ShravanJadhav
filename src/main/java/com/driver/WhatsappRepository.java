@@ -26,8 +26,7 @@ public class WhatsappRepository {
         this.customGroupCount = 0;
         this.messageId = 0;
     }
-    //HashSet<User> user = new HashSet<>();
-    //HashSet<Message>message = new HashSet<>();
+
 
     public String createUser(String name, String mobile) throws Exception {
         if(userMobile.contains(mobile)){
@@ -66,27 +65,15 @@ public class WhatsappRepository {
     public int sendMessage(Message message, User sender, Group group) throws Exception{
         if(!groupUserMap.containsKey(group)) throw new Exception("Group does not exist");
 
-        boolean isMember = false;
-        List<User> userList = groupUserMap.get(group);
-        for(User user : userList){
-            if(user.equals(sender)){
-                isMember=true;
-                break;
-            }
+        if(!groupUserMap.get(group).contains(sender)){
+            throw new Exception("You are not allowed to send message");
         }
-        if(isMember==false) throw new Exception("You are not allowed to send message");
 
-//        if(!groupUserMap.get(group).contains(sender)){
-//            throw new Exception("You are not allowed to send message");
-//        }
-
-        List<Message> messageList = new ArrayList<>();
-        if(groupMessageMap.containsKey(group)){
-            messageList = groupMessageMap.get(group);
-        }
+        List<Message> messageList =groupMessageMap.get(group);
         messageList.add(message);
         groupMessageMap.put(group,messageList);
-        return messageList.size();
+
+        return groupMessageMap.get(group).size();
     }
 
 
@@ -94,32 +81,63 @@ public class WhatsappRepository {
         if(!groupUserMap.containsKey(group)) throw new Exception("Group does not exist");
         if(!adminMap.get(group).equals(approver)) throw new Exception("Approver does not have rights");
 
-
-        boolean isMember= false;
-        List<User> userList = groupUserMap.get(group);
-        for(User user1 : userList){
-            if(user1.equals(user)){
-                isMember=true;
-                break;
-            }
+        if(!groupUserMap.get(group).contains(user)){
+            throw new Exception("User is not a participant");
         }
-        if(isMember==false) throw new Exception("User is not a participant");
 
-//        if(!groupUserMap.get(group).contains(user)){
-//            throw new Exception("User is not a participant");
-//        }
-
-        adminMap.put(group, user);
+        adminMap.replace(group, user);
         return "SUCCESS";
     }
 
 
-//    public int removeUser(User user)throws Exception {
-//
-//        return 0;
-//    }
+    public int removeUser(User user)throws Exception {
 
-//    public String findMessage(Date start, Date end, int k) throws Exception {
-//         List<Message>
-//    }
+         for(Group gp : groupUserMap.keySet()){
+             List<User> userList = groupUserMap.get(gp);
+
+             if(userList.contains(user)){
+                 for(User admin : adminMap.values()){
+                     if(admin == user){
+                         throw new Exception("Cannot remove admin");
+                     }
+                 }
+
+                 groupUserMap.get(gp).remove(user);
+
+                 for(Message m : senderMap.keySet()){
+                     User u = senderMap.get(m);
+
+                     if(u==user){
+                         senderMap.remove(m);
+                         groupMessageMap.get(gp).remove(m);
+
+                         return groupUserMap.get(gp).size()+groupMessageMap.get(gp).size()+senderMap.size();
+                     }
+                 }
+             }
+         }
+
+         throw new Exception("user not found");
+    }
+
+    public String findMessage(Date start, Date end, int k) throws Exception {
+          TreeMap<Integer,String> map = new TreeMap<>();
+
+          ArrayList<Integer>list = new ArrayList<>();
+
+          for(Message m : senderMap.keySet()){
+              if(m.getTimestamp().compareTo(start)>0 && m.getTimestamp().compareTo(end)<0){
+                  map.put(m.getId(), m.getContent());
+                  list.add(m.getId());
+
+              }
+          }
+
+          if(map.size()<k) throw new Exception("k is gretaer than number of message");
+
+          Collections.sort(list);
+          int K = list.get(list.size()-k);
+          return map.get(K);
+
+    }
 }
