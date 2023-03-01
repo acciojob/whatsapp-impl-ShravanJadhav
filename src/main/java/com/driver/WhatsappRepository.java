@@ -30,7 +30,7 @@ public class WhatsappRepository {
 
     public String createUser(String name, String mobile) throws Exception {
         if(userMobile.contains(mobile)){
-            throw new Exception("User already there");
+            throw new Exception("User already exists");
         }
 
         User user = new User(name,mobile);
@@ -39,7 +39,7 @@ public class WhatsappRepository {
     }
 
     public Group creatGroup(List<User> users) {
-      if(users.size()==0){
+      if(users.size()==2){
           Group gp = new Group(users.get(1).getName(),2);
           groupUserMap.put(gp,users);
           groupMessageMap.put(gp, new ArrayList<>());
@@ -58,7 +58,8 @@ public class WhatsappRepository {
 
     public int createMessage(String content) {
 
-        Message message = new Message(this.messageId++, content);
+        this.messageId++;
+        Message message = new Message(messageId, content);
 
         return message.getId();
 
@@ -135,7 +136,7 @@ public class WhatsappRepository {
               }
           }
 
-          if(map.size()<k) throw new Exception("k is gretaer than number of message");
+          if(map.size()<k) throw new Exception("k is greater than the number of messages");
 
           Collections.sort(list);
           int K = list.get(list.size()-k);
