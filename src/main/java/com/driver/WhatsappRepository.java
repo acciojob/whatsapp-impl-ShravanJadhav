@@ -39,18 +39,20 @@ public class WhatsappRepository {
     }
 
     public Group creatGroup(List<User> users) {
-        String groupName = "";
-        if(users.size()>2){
-            groupName =  "Group "+ this.customGroupCount++;
-        }else{
-            groupName = users.get(1).getName();
-        }
-         Group group = new Group(groupName, users.size());
-        groupMessageMap.put(group, new ArrayList<Message>());
-        groupUserMap.put(group,users);
-        adminMap.put(group,users.get(0));
-
-        return group;
+      if(users.size()==0){
+          Group gp = new Group(users.get(1).getName(),2);
+          groupUserMap.put(gp,users);
+          groupMessageMap.put(gp, new ArrayList<>());
+          return gp;
+      }
+      else{
+          customGroupCount++;
+          Group gp = new Group("Group "+ customGroupCount,users.size());
+          groupUserMap.put(gp,users);
+          groupMessageMap.put(gp,new ArrayList<>());
+          adminMap.put(gp,users.get(0));
+          return gp;
+      }
     }
 
 
@@ -79,7 +81,7 @@ public class WhatsappRepository {
 
     public String chnageAdmin(User approver, User user, Group group) throws Exception {
         if(!groupUserMap.containsKey(group)) throw new Exception("Group does not exist");
-        if(!adminMap.get(group).equals(approver)) throw new Exception("Approver does not have rights");
+        if(adminMap.get(group)!=approver) throw new Exception("Approver does not have rights");
 
         if(!groupUserMap.get(group).contains(user)){
             throw new Exception("User is not a participant");
